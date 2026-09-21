@@ -27,10 +27,10 @@ jobs:
 
       - name: Prepare Scaffolding & Inject Project
         run: |
-          # 1. Base Flutter Container create karein
+          # 1. Base Flutter Container
           flutter create --org com.example subi_business_app
 
-          # 2. Upload hui zip ko extract karein
+          # 2. Extract uploaded zip file
           ZIP_NAME=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
           if [ -n "$ZIP_NAME" ]; then
             unzip -o "$ZIP_NAME" -d temp/
@@ -49,7 +49,11 @@ jobs:
             fi
           fi
 
-          # 3. Custom App Icon Setup (Aapka Gold Beauty Logo replace karega)
+          # 3. Fix Null Safety for Optional Service Price in Appointment View
+          sed -i "s/s.amount.toStringAsFixed(0)/(s.amount != null ? '₹' + s.amount\!.toStringAsFixed(0) : 'Included')/g" subi_business_app/lib/screens/appointments/appointment_view_screen.dart
+          sed -i "s/'₹\${(s.amount/(s.amount/g" subi_business_app/lib/screens/appointments/appointment_view_screen.dart || true
+
+          # 4. Custom App Icon Setup
           ICON_FILE=$(find . -maxdepth 2 -name "app_icon.png" | head -n 1)
           if [ -n "$ICON_FILE" ]; then
             echo "Applying custom app icon: $ICON_FILE"
