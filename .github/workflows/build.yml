@@ -49,9 +49,33 @@ jobs:
             fi
           fi
 
-          # 3. Fix Null Safety for Optional Service Price in Appointment View
-          sed -i "s/s.amount.toStringAsFixed(0)/(s.amount != null ? '₹' + s.amount\!.toStringAsFixed(0) : 'Included')/g" subi_business_app/lib/screens/appointments/appointment_view_screen.dart
-          sed -i "s/'₹\${(s.amount/(s.amount/g" subi_business_app/lib/screens/appointments/appointment_view_screen.dart || true
+          # 3. Clean Python Script to Fix Optional Price Null-Safety
+          python3 -c '
+          import os
+
+          # Fix in appointment_view_screen.dart
+          view_file = "subi_business_app/lib/screens/appointments/appointment_view_screen.dart"
+          if os.path.exists(view_file):
+              with open(view_file, "r") as f:
+                  content = f.read()
+              content = content.replace(
+                  "Text(\x27₹${s.amount.toStringAsFixed(0)}\x27, style: const TextStyle(fontWeight: FontWeight.bold)),",
+                  "Text(s.amount != null ? \x27₹${s.amount!.toStringAsFixed(0)}\x27 : \x27Included\x27, style: const TextStyle(fontWeight: FontWeight.bold)),"
+              )
+              with open(view_file, "w") as f:
+                  f.write(content)
+              print("Fixed appointment_view_screen null safety.")
+
+          # Fix in theme CardThemeData compatibility if needed
+          theme_file = "subi_business_app/lib/theme/app_theme.dart"
+          if os.path.exists(theme_file):
+              with open(theme_file, "r") as f:
+                  t_content = f.read()
+              t_content = t_content.replace("cardTheme: CardTheme(", "cardTheme: CardThemeData(")
+              with open(theme_file, "w") as f:
+                  f.write(t_content)
+              print("Fixed CardThemeData compatibility.")
+          '
 
           # 4. Custom App Icon Setup
           ICON_FILE=$(find . -maxdepth 2 -name "app_icon.png" | head -n 1)
